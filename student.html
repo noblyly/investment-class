@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>모둠 투자 수업</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans KR',sans-serif;background:#f5f5f0;min-height:100vh;padding:1.5rem}
+.header{text-align:center;margin-bottom:1.25rem}
+.header h1{font-size:22px;font-weight:500;color:#1a1a18;margin-bottom:4px}
+.header p{font-size:14px;color:#73726c}
+.class-chip{display:inline-block;font-size:12px;font-weight:500;padding:4px 12px;border-radius:20px;background:#e1f5ee;color:#085041;margin-bottom:8px}
+.card{background:#fff;border:0.5px solid rgba(0,0,0,0.12);border-radius:12px;padding:1.25rem;margin-bottom:1rem}
+.card h3{font-size:14px;font-weight:500;color:#73726c;margin-bottom:10px}
+.budget-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.budget-total{font-size:13px;color:#73726c}
+.budget-remain{font-size:15px;font-weight:500}
+.progress-track{width:100%;height:6px;background:#f0ede8;border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;background:#1D9E75;border-radius:3px;transition:width .3s}
+.auth-row{display:flex;gap:8px}
+.fi{flex:1;padding:8px 10px;font-size:14px;border:0.5px solid #d3d1c7;border-radius:8px;background:#f5f5f0;color:#1a1a18}
+.fi:focus{outline:none;border-color:#1D9E75;box-shadow:0 0 0 2px rgba(29,158,117,.12)}
+.fi:disabled{opacity:.5}
+.groups-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-bottom:1rem}
+.group-card{background:#fff;border:0.5px solid rgba(0,0,0,0.12);border-radius:12px;padding:1rem 1.25rem}
+.group-name{font-size:15px;font-weight:500;color:#1a1a18}
+.group-desc{font-size:12px;color:#73726c;margin-top:2px}
+.group-price{font-size:12px;color:#1D9E75;font-weight:500;margin-top:2px}
+.group-total-val{font-size:13px;font-weight:500;color:#1a1a18}
+.qty-section{border-top:0.5px solid rgba(0,0,0,0.08);padding-top:10px;margin-top:8px}
+.qty-label{font-size:12px;color:#73726c;margin-bottom:6px}
+.qty-row{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.qty-row label{font-size:12px;color:#73726c;min-width:30px}
+.qty-input{width:60px;padding:5px 7px;font-size:13px;border:0.5px solid #d3d1c7;border-radius:8px;background:#f5f5f0;color:#1a1a18;text-align:center}
+.qty-input:focus{outline:none;border-color:#1D9E75;box-shadow:0 0 0 2px rgba(29,158,117,.12)}
+.qty-input:disabled{opacity:.5}
+.qty-amount{font-size:12px;color:#73726c}
+.submit-btn{width:100%;padding:12px;font-size:15px;font-weight:500;background:#1D9E75;color:#fff;border:none;border-radius:8px;cursor:pointer;margin-bottom:6px;transition:background .2s}
+.submit-btn:hover{background:#0F6E56}
+.modify-btn{width:100%;padding:10px;font-size:14px;font-weight:500;background:#f5f5f0;color:#73726c;border:0.5px solid #d3d1c7;border-radius:8px;cursor:pointer;display:none;transition:all .2s}
+.modify-btn:hover{border-color:#1D9E75;color:#1D9E75}
+.error-msg{font-size:13px;color:#E24B4A;text-align:center;margin-top:6px;min-height:18px}
+.success-banner{background:#e1f5ee;border:0.5px solid #5dcaa5;border-radius:12px;padding:1rem 1.25rem;margin-bottom:1rem;display:none;text-align:center}
+.success-banner p{font-size:14px;color:#085041;font-weight:500}
+.success-banner small{font-size:12px;color:#0F6E56}
+.no-class-card{background:#fff;border:0.5px solid rgba(0,0,0,0.12);border-radius:12px;padding:3rem;text-align:center;color:#73726c;font-size:14px}
+.loading{text-align:center;padding:3rem;color:#73726c;font-size:14px}
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="header">
+  <div id="class-chip-area"></div>
+  <h1>📈 모둠 투자 수업</h1>
+  <p>5만원을 모둠 상품에 배분해 투자하세요</p>
+</div>
+
+<div id="no-class-card" class="no-class-card" style="display:none">
+  ⚠️ 올바른 반 링크로 접속해주세요.<br>선생님께 링크를 다시 받아보세요.
+</div>
+
+<div id="loading" class="loading">수업 정보를 불러오는 중...</div>
+
+<div id="main-content" style="display:none">
+  <div id="success-banner" class="success-banner">
+    <p>✅ 투자가 완료되었습니다</p>
+    <small>수정하려면 아래 수정하기 버튼을 누르세요</small>
+  </div>
+
+  <div class="card">
+    <div class="budget-top">
+      <span class="budget-total">예산 ₩50,000</span>
+      <span class="budget-remain" id="remain-text">잔액 ₩50,000</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progress" style="width:0%"></div></div>
+  </div>
+
+  <div class="card">
+    <h3>👤 내 정보</h3>
+    <div class="auth-row">
+      <input class="fi" id="sid" type="text" placeholder="학번 4자리" maxlength="4" inputmode="numeric" style="max-width:130px">
+      <input class="fi" id="sname" type="text" placeholder="이름" maxlength="10">
+    </div>
+  </div>
+
+  <div class="groups-grid" id="groups-grid"></div>
+
+  <button class="submit-btn" id="submit-btn" onclick="submitInvestment()">✈️ 투자 제출하기</button>
+  <button class="modify-btn" id="modify-btn" onclick="enableModify()">✏️ 수정하기</button>
+  <p class="error-msg" id="error-msg"></p>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBDuG_U1HcIIYkdgToXDEaIJj1hAYqB8Dg",
+  authDomain: "investment-class.firebaseapp.com",
+  databaseURL: "https://investment-class-default-rtdb.firebaseio.com",
+  projectId: "investment-class",
+  storageBucket: "investment-class.firebasestorage.app",
+  messagingSenderId: "368334054427",
+  appId: "1:368334054427:web:2822609354bc7930bf44be"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const BUDGET = 50000;
+const CLASSES = {
+  '203A':{label:'203반',sub:'과제A'},
+  '206A':{label:'206반',sub:'과제A'},
+  '203B':{label:'203반',sub:'과제B'},
+  '206B':{label:'206반',sub:'과제B'},
+  '203D':{label:'203반',sub:'디릿'},
+  '206D':{label:'206반',sub:'디릿'},
+};
+
+let currentClassKey = null;
+let groups = [];
+
+function getClassKey() {
+  return new URLSearchParams(location.search).get('class');
+}
+
+async function init() {
+  const key = getClassKey();
+  if (!key || !CLASSES[key]) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('no-class-card').style.display = 'block';
+    return;
+  }
+  currentClassKey = key;
+  const info = CLASSES[key];
+  document.getElementById('class-chip-area').innerHTML =
+    `<span class="class-chip">${info.label} ${info.sub}</span>`;
+
+  // Firebase에서 선생님 설정 불러오기
+  try {
+    const snap = await get(ref(db, `config/${key}`));
+    if (snap.exists() && snap.val().groups) {
+      groups = snap.val().groups;
+    } else {
+      groups = [
+        {id:1,name:'1모둠',desc:'',price:0},
+        {id:2,name:'2모둠',desc:'',price:0},
+        {id:3,name:'3모둠',desc:'',price:0},
+        {id:4,name:'4모둠',desc:'',price:0},
+      ];
+    }
+  } catch(e) {
+    groups = [{id:1,name:'1모둠',desc:'',price:0},{id:2,name:'2모둠',desc:'',price:0},
+              {id:3,name:'3모둠',desc:'',price:0},{id:4,name:'4모둠',desc:'',price:0}];
+  }
+
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('main-content').style.display = 'block';
+  buildGrid();
+}
+
+function buildGrid() {
+  const grid = document.getElementById('groups-grid');
+  grid.innerHTML = '';
+  groups.forEach(g => {
+    const priceStr = g.price ? `주당 ₩${Number(g.price).toLocaleString()}` : '가격 미설정';
+    const card = document.createElement('div');
+    card.className = 'group-card';
+    card.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+        <div>
+          <div class="group-name">${g.name}</div>
+          <div class="group-desc">${g.desc || '상품 설명 없음'}</div>
+          <div class="group-price">${priceStr}</div>
+        </div>
+        <div class="group-total-val" id="gtotal-${g.id}">₩0</div>
+      </div>
+      <div class="qty-section">
+        <div class="qty-label">수량 입력 (최대 3칸)</div>
+        ${[1,2,3].map(n => `
+        <div class="qty-row">
+          <label>${n}번</label>
+          <input class="qty-input" id="q-${g.id}-${n}" type="number" min="0" step="1" placeholder="0" oninput="calcGroup(${g.id})">
+          <span class="qty-amount" id="qa-${g.id}-${n}"></span>
+        </div>`).join('')}
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+window.calcGroup = function(gid) {
+  const g = groups.find(x => x.id === gid);
+  if (!g) return;
+  let total = 0;
+  [1,2,3].forEach(n => {
+    const v = parseInt(document.getElementById(`q-${gid}-${n}`).value) || 0;
+    const amt = v * (g.price || 0);
+    total += amt;
+    const qa = document.getElementById(`qa-${gid}-${n}`);
+    if (qa) qa.textContent = v > 0 ? `→ ₩${amt.toLocaleString()}` : '';
+  });
+  const el = document.getElementById(`gtotal-${gid}`);
+  if (el) el.textContent = total > 0 ? `₩${total.toLocaleString()}` : '₩0';
+  refreshBudget();
+};
+
+function refreshBudget() {
+  let total = 0;
+  groups.forEach(g => [1,2,3].forEach(n => {
+    total += (parseInt(document.getElementById(`q-${g.id}-${n}`)?.value) || 0) * (g.price || 0);
+  }));
+  const remain = BUDGET - total;
+  const pct = Math.min(100, (total / BUDGET) * 100);
+  document.getElementById('remain-text').textContent =
+    (remain >= 0 ? '잔액 ' : '초과 -') + '₩' + Math.abs(remain).toLocaleString();
+  document.getElementById('remain-text').style.color = remain < 0 ? '#E24B4A' : '#1D9E75';
+  const prog = document.getElementById('progress');
+  prog.style.width = pct + '%';
+  prog.style.background = remain < 0 ? '#E24B4A' : '#1D9E75';
+}
+
+function getTotal() {
+  let t = 0;
+  groups.forEach(g => [1,2,3].forEach(n => {
+    t += (parseInt(document.getElementById(`q-${g.id}-${n}`)?.value) || 0) * (g.price || 0);
+  }));
+  return t;
+}
+
+function setInputsDisabled(dis) {
+  ['sid','sname'].forEach(id => { const el = document.getElementById(id); if(el) el.disabled = dis; });
+  groups.forEach(g => [1,2,3].forEach(n => {
+    const el = document.getElementById(`q-${g.id}-${n}`);
+    if (el) el.disabled = dis;
+  }));
+}
+
+window.submitInvestment = async function() {
+  const sid = document.getElementById('sid').value.trim();
+  const sname = document.getElementById('sname').value.trim();
+  const err = document.getElementById('error-msg');
+  if (!/^\d{4}$/.test(sid)) { err.textContent = '학번은 숫자 4자리로 입력해주세요.'; return; }
+  if (!sname) { err.textContent = '이름을 입력해주세요.'; return; }
+  const total = getTotal();
+  if (total === 0) { err.textContent = '최소 하나의 모둠에 투자해주세요.'; return; }
+  if (total > BUDGET) { err.textContent = '투자 총액이 예산(₩50,000)을 초과했습니다.'; return; }
+  err.textContent = '';
+
+  const investments = {};
+  groups.forEach(g => {
+    const qtys = [1,2,3].map(n => parseInt(document.getElementById(`q-${g.id}-${n}`)?.value) || 0);
+    const qty = qtys.reduce((a,b) => a+b, 0);
+    if (qty > 0) investments[g.name] = { qty, amount: qty * (g.price || 0), qtys };
+  });
+
+  const record = { studentId: sid, studentName: sname, investments, total, timestamp: new Date().toISOString() };
+
+  try {
+    document.getElementById('submit-btn').textContent = '저장 중...';
+    document.getElementById('submit-btn').disabled = true;
+    await set(ref(db, `investments/${currentClassKey}/${sid}`), record);
+    setInputsDisabled(true);
+    document.getElementById('submit-btn').style.display = 'none';
+    document.getElementById('modify-btn').style.display = 'block';
+    document.getElementById('success-banner').style.display = 'block';
+  } catch(e) {
+    err.textContent = '저장에 실패했습니다. 인터넷 연결을 확인해주세요.';
+    document.getElementById('submit-btn').textContent = '✈️ 투자 제출하기';
+    document.getElementById('submit-btn').disabled = false;
+  }
+};
+
+window.enableModify = function() {
+  setInputsDisabled(false);
+  document.getElementById('submit-btn').style.display = 'block';
+  document.getElementById('submit-btn').textContent = '✈️ 투자 제출하기';
+  document.getElementById('submit-btn').disabled = false;
+  document.getElementById('modify-btn').style.display = 'none';
+  document.getElementById('success-banner').style.display = 'none';
+};
+
+init();
+</script>
+</body>
+</html>

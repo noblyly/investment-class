@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>선생님 대시보드</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans KR',sans-serif;background:#f5f5f0;min-height:100vh;padding:1.5rem}
+.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:8px}
+.header h1{font-size:20px;font-weight:500;color:#1a1a18}
+.badge{font-size:12px;padding:4px 10px;border-radius:8px;background:#e6f1fb;color:#0c447c}
+.tab-row{display:flex;gap:6px;margin-bottom:1.25rem;flex-wrap:wrap}
+.tab{padding:7px 14px;font-size:13px;border:0.5px solid #d3d1c7;border-radius:8px;background:#fff;color:#73726c;cursor:pointer;transition:all .15s}
+.tab.active{background:#1D9E75;color:#fff;border-color:#1D9E75}
+.panel{display:none}
+.panel.active{display:block}
+.card{background:#fff;border:0.5px solid rgba(0,0,0,0.12);border-radius:12px;padding:1.25rem;margin-bottom:1rem}
+.card h3{font-size:15px;font-weight:500;color:#1a1a18;margin-bottom:12px}
+.fi{padding:7px 10px;font-size:13px;border:0.5px solid #d3d1c7;border-radius:8px;background:#f5f5f0;color:#1a1a18}
+.fi:focus{outline:none;border-color:#1D9E75;box-shadow:0 0 0 2px rgba(29,158,117,.12)}
+.btn{padding:7px 14px;font-size:13px;border:0.5px solid #d3d1c7;border-radius:8px;background:#f5f5f0;color:#1a1a18;cursor:pointer;transition:all .15s;white-space:nowrap}
+.btn:hover{border-color:#1D9E75;color:#1D9E75}
+.btn-p{background:#1D9E75;color:#fff;border-color:#1D9E75}
+.btn-p:hover{background:#0F6E56;color:#fff}
+.btn-d{border-color:#E24B4A;color:#E24B4A}
+.btn-d:hover{background:#E24B4A;color:#fff}
+.class-selector{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:1rem}
+.class-btn{padding:10px 12px;font-size:13px;font-weight:500;border:0.5px solid #d3d1c7;border-radius:8px;background:#fff;color:#1a1a18;cursor:pointer;transition:all .2s;text-align:left}
+.class-btn:hover{border-color:#1D9E75;color:#1D9E75}
+.class-btn.selected{background:#1D9E75;color:#fff;border-color:#1D9E75}
+.class-label{font-size:11px;opacity:.75;margin-top:2px}
+.class-bar{background:#e1f5ee;border:0.5px solid #5dcaa5;border-radius:8px;padding:10px 14px;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px}
+.class-bar span{font-size:13px;color:#085041;font-weight:500}
+.class-bar small{font-size:12px;color:#0F6E56}
+.group-config-item{background:#f5f5f0;border-radius:8px;padding:10px 12px;margin-bottom:8px}
+.group-config-item .r1{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+.group-config-item .r2{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.gnum{font-size:13px;font-weight:500;color:#73726c;min-width:48px}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:1.25rem}
+.stat-card{background:#f5f5f0;border-radius:8px;padding:.9rem;text-align:center}
+.stat-card .num{font-size:22px;font-weight:500;color:#1a1a18;margin-bottom:2px}
+.stat-card .lbl{font-size:12px;color:#73726c}
+.rank-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.rank-no{font-size:13px;font-weight:500;color:#73726c;min-width:18px}
+.rank-name{font-size:13px;color:#1a1a18;min-width:56px}
+.rank-bar-wrap{flex:1;height:24px;background:#f5f5f0;border-radius:3px;overflow:hidden}
+.rank-bar{height:100%;background:#1D9E75;border-radius:3px;display:flex;align-items:center;padding-left:6px;transition:width .4s}
+.rank-bar span{font-size:11px;color:#fff;white-space:nowrap;overflow:hidden}
+.rank-amt{font-size:13px;font-weight:500;min-width:72px;text-align:right;color:#1a1a18}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{padding:9px 10px;text-align:left;font-weight:500;font-size:12px;color:#73726c;border-bottom:0.5px solid rgba(0,0,0,0.1);background:#f5f5f0;white-space:nowrap}
+td{padding:8px 10px;border-bottom:0.5px solid rgba(0,0,0,0.08);color:#1a1a18;word-break:break-word}
+tr:last-child td{border-bottom:none}
+.del-btn{font-size:11px;padding:3px 7px;border:0.5px solid #E24B4A;border-radius:8px;background:transparent;color:#E24B4A;cursor:pointer}
+.del-btn:hover{background:#E24B4A;color:#fff}
+.empty{text-align:center;padding:2rem;color:#73726c;font-size:14px}
+.save-ok{font-size:13px;color:#1D9E75;margin-top:6px;min-height:18px}
+.link-box{background:#f5f5f0;border:0.5px solid #d3d1c7;border-radius:8px;padding:10px 12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px}
+.link-url{font-size:12px;color:#73726c;font-family:monospace;flex:1;word-break:break-all}
+.copy-btn{padding:5px 10px;font-size:12px;border:0.5px solid #d3d1c7;border-radius:8px;background:#fff;color:#1a1a18;cursor:pointer;white-space:nowrap}
+.copy-btn:hover{border-color:#1D9E75;color:#1D9E75}
+.loading{text-align:center;padding:2rem;color:#73726c;font-size:14px}
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="header">
+  <h1>📊 선생님 대시보드</h1>
+  <span class="badge">🔒 선생님 전용</span>
+</div>
+
+<div id="class-bar" class="class-bar" style="display:none">
+  <div>
+    <span id="class-bar-name"></span>
+    <div><small id="class-bar-key"></small></div>
+  </div>
+  <button class="btn" onclick="changeClass()" style="font-size:12px;padding:5px 10px">반 변경</button>
+</div>
+
+<div class="tab-row" id="tab-row" style="display:none">
+  <button class="tab active" onclick="switchTab('setup',this)">⚙️ 수업 설정</button>
+  <button class="tab" onclick="switchTab('summary',this)">📈 투자 현황</button>
+  <button class="tab" onclick="switchTab('detail',this)">📋 학생 내역</button>
+</div>
+
+<div id="class-select-panel">
+  <div class="card">
+    <h3>반을 선택하세요</h3>
+    <div class="class-selector" id="class-selector"></div>
+  </div>
+</div>
+
+<div id="tab-setup" class="panel active" style="display:none">
+  <div class="card">
+    <h3>모둠 수 설정</h3>
+    <div style="display:flex;align-items:center;gap:8px">
+      <label style="font-size:13px;color:#73726c">모둠 수</label>
+      <input class="fi" id="gc-input" type="number" min="2" max="8" value="4" style="width:70px">
+      <button class="btn btn-p" onclick="applyGroupCount()">적용</button>
+    </div>
+  </div>
+  <div class="card">
+    <h3>모둠별 상품 설정</h3>
+    <div id="group-config-list"></div>
+    <button class="btn btn-p" onclick="saveSetup()" style="width:100%">💾 설정 저장</button>
+    <p class="save-ok" id="save-ok"></p>
+  </div>
+  <div class="card">
+    <h3>🔗 학생 페이지 링크</h3>
+    <p style="font-size:13px;color:#73726c;margin-bottom:10px">설정 저장 후 아래 링크를 학생들에게 공유하세요.</p>
+    <div id="link-area"></div>
+  </div>
+  <div class="card">
+    <h3>데이터 관리</h3>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-d" onclick="clearAll()">🗑️ 이 반 데이터 초기화</button>
+    </div>
+  </div>
+</div>
+
+<div id="tab-summary" class="panel" style="display:none">
+  <div id="loading-summary" class="loading">불러오는 중...</div>
+  <div id="summary-content" style="display:none">
+    <div class="stat-grid" id="stat-grid"></div>
+    <div class="card">
+      <h3>모둠별 투자 유치 순위</h3>
+      <div id="ranking-rows"></div>
+    </div>
+  </div>
+</div>
+
+<div id="tab-detail" class="panel" style="display:none">
+  <div style="display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;align-items:center">
+    <input class="fi" id="search-q" type="text" placeholder="학번 또는 이름 검색" style="flex:1;min-width:140px;max-width:220px" oninput="renderDetail()">
+    <button class="btn btn-d" onclick="clearAll()">🗑️ 이 반 초기화</button>
+  </div>
+  <div id="loading-detail" class="loading">불러오는 중...</div>
+  <div class="card" id="detail-wrap" style="padding:0;overflow:hidden;display:none">
+    <div class="tbl-wrap" id="detail-table"></div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, get, set, remove, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBDuG_U1HcIIYkdgToXDEaIJj1hAYqB8Dg",
+  authDomain: "investment-class.firebaseapp.com",
+  databaseURL: "https://investment-class-default-rtdb.firebaseio.com",
+  projectId: "investment-class",
+  storageBucket: "investment-class.firebasestorage.app",
+  messagingSenderId: "368334054427",
+  appId: "1:368334054427:web:2822609354bc7930bf44be"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const BUDGET = 50000;
+const CLASSES = {
+  '203A':{label:'203반',sub:'과제A'},
+  '206A':{label:'206반',sub:'과제A'},
+  '203B':{label:'203반',sub:'과제B'},
+  '206B':{label:'206반',sub:'과제B'},
+  '203D':{label:'203반',sub:'디릿'},
+  '206D':{label:'206반',sub:'디릿'},
+};
+
+let currentClass = null;
+let cfg = { groupCount: 4, groups: [] };
+let cachedRecords = [];
+let detailUnsubscribe = null;
+
+// 반 선택 버튼 생성
+function buildClassSelector() {
+  const el = document.getElementById('class-selector');
+  el.innerHTML = '';
+  Object.entries(CLASSES).forEach(([key, info]) => {
+    const b = document.createElement('button');
+    b.className = 'class-btn';
+    b.innerHTML = `<div>${info.label}</div><div class="class-label">${info.sub}</div>`;
+    b.onclick = () => selectClass(key, info);
+    el.appendChild(b);
+  });
+}
+
+async function selectClass(key, info) {
+  currentClass = { key, ...info };
+  document.getElementById('class-select-panel').style.display = 'none';
+  document.getElementById('tab-row').style.display = 'flex';
+  document.getElementById('class-bar').style.display = 'flex';
+  document.getElementById('class-bar-name').textContent = `${info.label} ${info.sub}`;
+  document.getElementById('class-bar-key').textContent = '코드: ' + key;
+
+  document.querySelectorAll('.panel').forEach(p => { p.classList.remove('active'); p.style.display = 'none'; });
+  document.getElementById('tab-setup').classList.add('active');
+  document.getElementById('tab-setup').style.display = 'block';
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelector('.tab-row .tab').classList.add('active');
+
+  await loadCfg();
+  renderSetup();
+  renderLinkArea();
+}
+
+window.changeClass = function() {
+  currentClass = null;
+  if (detailUnsubscribe) { detailUnsubscribe(); detailUnsubscribe = null; }
+  document.getElementById('class-select-panel').style.display = 'block';
+  document.getElementById('tab-row').style.display = 'none';
+  document.getElementById('class-bar').style.display = 'none';
+  document.querySelectorAll('.panel').forEach(p => { p.classList.remove('active'); p.style.display = 'none'; });
+};
+
+async function loadCfg() {
+  try {
+    const snap = await get(ref(db, `config/${currentClass.key}`));
+    if (snap.exists() && snap.val().groups) {
+      cfg = snap.val();
+      document.getElementById('gc-input').value = cfg.groupCount || cfg.groups.length;
+      return;
+    }
+  } catch(e) {}
+  cfg = { groupCount: 4, groups: [
+    {id:1,name:'1모둠',desc:'',price:0},
+    {id:2,name:'2모둠',desc:'',price:0},
+    {id:3,name:'3모둠',desc:'',price:0},
+    {id:4,name:'4모둠',desc:'',price:0},
+  ]};
+  document.getElementById('gc-input').value = 4;
+}
+
+window.switchTab = function(t, btn) {
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => { p.classList.remove('active'); p.style.display = 'none'; });
+  btn.classList.add('active');
+  document.getElementById('tab-' + t).classList.add('active');
+  document.getElementById('tab-' + t).style.display = 'block';
+  if (t === 'summary') renderSummary();
+  if (t === 'detail') loadAndRenderDetail();
+};
+
+window.applyGroupCount = function() {
+  const n = Math.min(8, Math.max(2, parseInt(document.getElementById('gc-input').value) || 4));
+  cfg.groupCount = n;
+  while (cfg.groups.length < n) cfg.groups.push({id: cfg.groups.length + 1, name: (cfg.groups.length + 1) + '모둠', desc: '', price: 0});
+  cfg.groups = cfg.groups.slice(0, n);
+  renderSetup();
+};
+
+function renderSetup() {
+  const list = document.getElementById('group-config-list');
+  list.innerHTML = '';
+  cfg.groups.forEach((g, i) => {
+    list.innerHTML += `<div class="group-config-item">
+      <div class="r1">
+        <span class="gnum">${i+1}모둠</span>
+        <input class="fi" id="gn-${i}" type="text" value="${g.name || (i+1)+'모둠'}" placeholder="모둠 이름" style="width:100px">
+        <input class="fi" id="gd-${i}" type="text" value="${g.desc || ''}" placeholder="상품 이름" style="flex:1;min-width:100px">
+      </div>
+      <div class="r2">
+        <label style="font-size:12px;color:#73726c;min-width:60px">주당 금액</label>
+        <input class="fi" id="gp-${i}" type="number" min="0" step="100" value="${g.price || 0}" style="width:100px">
+        <span style="font-size:12px;color:#73726c">원</span>
+      </div>
+    </div>`;
+  });
+}
+
+function renderLinkArea() {
+  if (!currentClass) { document.getElementById('link-area').innerHTML = ''; return; }
+  const base = location.href.replace('teacher.html', 'student.html').split('?')[0];
+  const url = base + '?class=' + currentClass.key;
+  document.getElementById('link-area').innerHTML = `
+    <div style="font-size:13px;color:#73726c;margin-bottom:4px">
+      <strong style="font-weight:500;color:#1a1a18">${currentClass.label} ${currentClass.sub}</strong> 학생 링크
+    </div>
+    <div class="link-box">
+      <span class="link-url">${url}</span>
+      <button class="copy-btn" onclick="copyLink('${url}',this)">📋 복사</button>
+    </div>
+    <p style="font-size:12px;color:#73726c;margin-top:6px">위 링크를 카카오톡이나 클래스룸으로 학생들에게 보내주세요.</p>
+  `;
+}
+
+window.copyLink = function(url, btn) {
+  navigator.clipboard.writeText(url).then(() => {
+    btn.textContent = '✅ 복사됨';
+    setTimeout(() => btn.textContent = '📋 복사', 2000);
+  });
+};
+
+window.saveSetup = async function() {
+  cfg.groups.forEach((g, i) => {
+    const n = document.getElementById('gn-' + i);
+    const d = document.getElementById('gd-' + i);
+    const p = document.getElementById('gp-' + i);
+    if (n) g.name = n.value.trim() || (i+1) + '모둠';
+    if (d) g.desc = d.value.trim();
+    if (p) g.price = parseInt(p.value) || 0;
+  });
+  cfg.groupCount = cfg.groups.length;
+  try {
+    await set(ref(db, `config/${currentClass.key}`), cfg);
+    const ok = document.getElementById('save-ok');
+    ok.textContent = '✅ 저장되었습니다!';
+    setTimeout(() => ok.textContent = '', 2000);
+    renderLinkArea();
+  } catch(e) {
+    alert('저장 실패. 인터넷 연결을 확인해주세요.');
+  }
+};
+
+async function getRecords() {
+  try {
+    const snap = await get(ref(db, `investments/${currentClass.key}`));
+    if (!snap.exists()) return [];
+    const data = snap.val();
+    return Object.values(data).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  } catch(e) { return []; }
+}
+
+async function renderSummary() {
+  document.getElementById('loading-summary').style.display = 'block';
+  document.getElementById('summary-content').style.display = 'none';
+  const recs = await getRecords();
+  cachedRecords = recs;
+  const totalS = recs.length;
+  const totalA = recs.reduce((s, r) => s + r.total, 0);
+  const avg = totalS ? Math.round(totalA / totalS) : 0;
+  document.getElementById('stat-grid').innerHTML = `
+    <div class="stat-card"><div class="num">${totalS}명</div><div class="lbl">참여 학생</div></div>
+    <div class="stat-card"><div class="num">₩${totalA.toLocaleString()}</div><div class="lbl">총 투자액</div></div>
+    <div class="stat-card"><div class="num">₩${avg.toLocaleString()}</div><div class="lbl">학생 평균</div></div>
+    <div class="stat-card"><div class="num">${cfg.groups.length}개</div><div class="lbl">운영 모둠</div></div>
+  `;
+  const gt = {};
+  cfg.groups.forEach(g => gt[g.name] = 0);
+  recs.forEach(r => Object.entries(r.investments || {}).forEach(([gn, v]) => {
+    if (gt[gn] !== undefined) gt[gn] += (v.amount || 0);
+  }));
+  const maxV = Math.max(...Object.values(gt), 1);
+  const sorted = cfg.groups.map(g => ({...g, total: gt[g.name] || 0})).sort((a, b) => b.total - a.total);
+  let html = '';
+  sorted.forEach((g, i) => {
+    const pct = Math.round((g.total / maxV) * 100);
+    html += `<div class="rank-row">
+      <span class="rank-no">${i+1}</span>
+      <span class="rank-name">${g.name}</span>
+      <div class="rank-bar-wrap"><div class="rank-bar" style="width:${pct}%"><span>${g.desc || ''}</span></div></div>
+      <span class="rank-amt">₩${g.total.toLocaleString()}</span>
+    </div>`;
+  });
+  document.getElementById('ranking-rows').innerHTML = html || '<div class="empty">아직 데이터가 없습니다</div>';
+  document.getElementById('loading-summary').style.display = 'none';
+  document.getElementById('summary-content').style.display = 'block';
+}
+
+async function loadAndRenderDetail() {
+  document.getElementById('loading-detail').style.display = 'block';
+  document.getElementById('detail-wrap').style.display = 'none';
+  cachedRecords = await getRecords();
+  document.getElementById('loading-detail').style.display = 'none';
+  document.getElementById('detail-wrap').style.display = 'block';
+  renderDetail();
+}
+
+window.renderDetail = function() {
+  const q = (document.getElementById('search-q') || {}).value || '';
+  const recs = cachedRecords.filter(r => !q || (r.studentId + r.studentName).includes(q));
+  let html = `<table><thead><tr>
+    <th style="width:70px">학번</th><th style="width:65px">이름</th>
+    ${cfg.groups.map(g => `<th style="width:80px">${g.name}</th>`).join('')}
+    <th style="width:75px">합계</th><th style="width:42px"></th>
+  </tr></thead><tbody>`;
+  if (!recs.length) {
+    html += `<tr><td colspan="${4 + cfg.groups.length}"><div class="empty">데이터가 없습니다</div></td></tr>`;
+  } else {
+    recs.forEach(r => {
+      html += `<tr><td>${r.studentId}</td><td style="font-weight:500">${r.studentName}</td>`;
+      cfg.groups.forEach(g => {
+        const v = r.investments && r.investments[g.name];
+        html += v ? `<td>₩${v.amount.toLocaleString()}<br><span style="font-size:11px;color:#73726c">${v.qty}주</span></td>`
+                  : `<td style="color:#73726c">-</td>`;
+      });
+      html += `<td style="font-weight:500">₩${r.total.toLocaleString()}</td>
+        <td><button class="del-btn" onclick="delRecord('${r.studentId}')">삭제</button></td></tr>`;
+    });
+  }
+  html += '</tbody></table>';
+  document.getElementById('detail-table').innerHTML = html;
+};
+
+window.delRecord = async function(sid) {
+  if (!confirm('이 학생 내역을 삭제할까요?')) return;
+  try {
+    await remove(ref(db, `investments/${currentClass.key}/${sid}`));
+    cachedRecords = await getRecords();
+    renderDetail();
+  } catch(e) { alert('삭제 실패. 다시 시도해주세요.'); }
+};
+
+window.clearAll = async function() {
+  if (!confirm('이 반의 모든 투자 데이터를 초기화할까요?')) return;
+  try {
+    await remove(ref(db, `investments/${currentClass.key}`));
+    cachedRecords = [];
+    renderDetail();
+    const ok = document.getElementById('save-ok');
+    if (ok) { ok.textContent = '✅ 초기화 완료'; setTimeout(() => ok.textContent = '', 2000); }
+  } catch(e) { alert('초기화 실패. 다시 시도해주세요.'); }
+};
+
+buildClassSelector();
+</script>
+</body>
+</html>

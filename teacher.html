@@ -122,6 +122,9 @@ tr:last-child td{border-bottom:none}
 </div>
 
 <div id="tab-summary" class="panel" style="display:none">
+  <div style="display:flex;justify-content:flex-end;margin-bottom:0.75rem">
+    <button class="btn" onclick="renderSummary()">🔄 새로고침</button>
+  </div>
   <div id="loading-summary" class="loading">불러오는 중...</div>
   <div id="summary-content" style="display:none">
     <div class="stat-grid" id="stat-grid"></div>
@@ -135,6 +138,7 @@ tr:last-child td{border-bottom:none}
 <div id="tab-detail" class="panel" style="display:none">
   <div style="display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;align-items:center">
     <input class="fi" id="search-q" type="text" placeholder="학번 또는 이름 검색" style="flex:1;min-width:140px;max-width:220px" oninput="renderDetail()">
+    <button class="btn" onclick="loadAndRenderDetail()">🔄 새로고침</button>
     <button class="btn btn-d" onclick="clearAll()">🗑️ 이 반 초기화</button>
   </div>
   <div id="loading-detail" class="loading">불러오는 중...</div>
@@ -263,7 +267,7 @@ function renderSetup() {
         <input class="fi" id="gd-${i}" type="text" value="${g.desc || ''}" placeholder="상품 이름" style="flex:1;min-width:100px">
       </div>
       <div class="r2">
-        <label style="font-size:12px;color:#73726c;min-width:60px">주당 금액</label>
+        <label style="font-size:12px;color:#73726c;min-width:60px">개당 금액</label>
         <input class="fi" id="gp-${i}" type="number" min="0" step="100" value="${g.price || 0}" style="width:100px">
         <span style="font-size:12px;color:#73726c">원</span>
       </div>
@@ -384,7 +388,7 @@ window.renderDetail = function() {
       html += `<tr><td>${r.studentId}</td><td style="font-weight:500">${r.studentName}</td>`;
       cfg.groups.forEach(g => {
         const v = r.investments && r.investments[g.name];
-        html += v ? `<td>₩${v.amount.toLocaleString()}<br><span style="font-size:11px;color:#73726c">${v.qty}주</span></td>`
+        html += v ? `<td>₩${v.amount.toLocaleString()}<br><span style="font-size:11px;color:#73726c">${v.qty}개</span></td>`
                   : `<td style="color:#73726c">-</td>`;
       });
       html += `<td style="font-weight:500">₩${r.total.toLocaleString()}</td>

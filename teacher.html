@@ -98,7 +98,7 @@ tr:last-child td{border-bottom:none}
     <h3>모둠 수 설정</h3>
     <div style="display:flex;align-items:center;gap:8px">
       <label style="font-size:13px;color:#73726c">모둠 수</label>
-      <input class="fi" id="gc-input" type="number" min="2" max="8" value="4" style="width:70px">
+      <input class="fi" id="gc-input" type="number" min="2" max="8" value="8" style="width:70px">
       <button class="btn btn-p" onclick="applyGroupCount()">적용</button>
     </div>
   </div>
@@ -175,7 +175,7 @@ const CLASSES = {
 };
 
 let currentClass = null;
-let cfg = { groupCount: 4, groups: [] };
+let cfg = { groupCount: 8, groups: [] };
 let cachedRecords = [];
 let detailUnsubscribe = null;
 
@@ -229,13 +229,17 @@ async function loadCfg() {
       return;
     }
   } catch(e) {}
-  cfg = { groupCount: 4, groups: [
+  cfg = { groupCount: 8, groups: [
     {id:1,name:'1모둠',desc:'',price:0},
     {id:2,name:'2모둠',desc:'',price:0},
     {id:3,name:'3모둠',desc:'',price:0},
     {id:4,name:'4모둠',desc:'',price:0},
+    {id:5,name:'5모둠',desc:'',price:0},
+    {id:6,name:'6모둠',desc:'',price:0},
+    {id:7,name:'7모둠',desc:'',price:0},
+    {id:8,name:'8모둠',desc:'',price:0},
   ]};
-  document.getElementById('gc-input').value = 4;
+  document.getElementById('gc-input').value = 8;
 }
 
 window.switchTab = function(t, btn) {
@@ -249,7 +253,7 @@ window.switchTab = function(t, btn) {
 };
 
 window.applyGroupCount = function() {
-  const n = Math.min(8, Math.max(2, parseInt(document.getElementById('gc-input').value) || 4));
+  const n = Math.min(8, Math.max(2, parseInt(document.getElementById('gc-input').value) || 8));
   cfg.groupCount = n;
   while (cfg.groups.length < n) cfg.groups.push({id: cfg.groups.length + 1, name: (cfg.groups.length + 1) + '모둠', desc: '', price: 0});
   cfg.groups = cfg.groups.slice(0, n);
